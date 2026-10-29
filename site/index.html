@@ -1,84 +1,9 @@
 <!doctype html>
 <html lang="cs">
-<head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="QB Radar – redakční výběr ze světa ženského fotbalu.">
-<meta name="referrer" content="no-referrer">
-<title>QB Radar · redakční radar</title>
-<link rel="stylesheet" href="styles.css">
-<script src="sources.js" defer></script>
-<script src="app.js" defer></script>
-</head>
-<body>
-<header>
-  <a class="brand" href="#"><span class="monogram">QB</span><span>RADAR<small>QUEENBALLERS</small></span></a>
-  <nav aria-label="Hlavní navigace"><a href="#selection">Náměty</a><a href="#collection">Sběr</a><a href="#sources">Zdroje</a><a href="#guide">Jak používat</a></nav>
-  <div class="spacer"></div>
-  <div class="controls" id="controls" hidden>
-    <button id="refresh">Obnovit data</button>
-    <button id="settingsBtn">Připojení</button>
-    <button id="logoutBtn" class="small">Odhlásit</button>
-  </div>
-</header>
-<main>
-  <div class="setup card" id="setup">
-    <p class="eyebrow">REDAKČNÍ PRACOVIŠTĚ</p>
-    <h1>Fotbalové příběhy.<br>Na jednom místě.</h1>
-    <p>Radar průběžně sleduje zdroje a každé ráno připraví náměty podle zadání QueenBallers. Pro vstup potřebujete přístup k repozitáři redakce.</p>
-    <label for="repoInput">Repozitář</label>
-    <input id="repoInput" placeholder="miloscermak/qb-radar-pilot" autocomplete="off" spellcheck="false">
-    <label for="tokenInput">Přístupový token GitHubu</label>
-    <input id="tokenInput" type="password" placeholder="github_pat_…" autocomplete="off">
-    <p class="token-note">Token musí mít pro tento repozitář oprávnění <b>Contents: read and write</b> a <b>Actions: read and write</b>. Zůstává v tomto prohlížeči a posílá se pouze na GitHub. Odhlášení ho smaže. Klíč OpenRouter sem nepatří.</p>
-    <p><button class="primary" id="saveSetup">Vstoupit do Radaru →</button> <button id="cancelSetup" hidden>Zpět</button></p>
-    <p id="setupError" role="alert"></p>
-    <details><summary>Jak získat přístup</summary><p>Správce přidá váš účet mezi spolupracovníky soukromého repozitáře. Pak si v <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">nastavení GitHubu</a> vytvořte fine-grained token jen pro tento repozitář s oprávněními uvedenými výše. Pro samotné čtení stačí Contents: read.</p></details>
-  </div>
-
-  <div id="app" hidden>
-    <div class="page-intro"><div><p class="eyebrow">ŽENSKÝ FOTBAL · REDAKČNÍ VÝBĚR</p><h1>Co stojí za pozornost.</h1><p>Nové informace, původní příběhy a konkrétní podklady pro QueenBallers.</p></div><div class="automation"><label class="switch" id="switch" title="Zapne nebo vypne plánovaný sběr na GitHubu"><input type="checkbox" id="switchInput"><span class="track"></span><span id="switchLabel">Ověřuji sběr…</span></label><p id="dataTime" class="muted"></p></div></div>
-    <div id="health" aria-live="polite" hidden></div>
-
-    <section class="card selection" id="selection">
-      <div class="section-heading"><div><p class="eyebrow">01 / PRO REDAKCI</p><h2>Výběr námětů</h2></div><div class="articles-filter"><label for="radarSelect" class="sr-only">Den výběru</label><select id="radarSelect"></select><button id="retryRadar" title="Nové placené AI zpracování vybraného dne; obvykle několik desítek centů.">Obnovit AI výběr</button></div></div>
-      <p class="section-description" id="radarHint">Výběr podle Nikolina zadání. U každého námětu najdete důvod, podklad a navržený úkol. Konečné rozhodnutí patří redakci.</p>
-      <div class="radar-filters">
-        <label>Priorita<select id="priorityFilter"><option value="">Všechny priority</option><option>řešit dnes</option><option>dobré téma</option><option>archiv</option></select></label>
-        <label>Rubrika<select id="rubricFilter"><option value="">Všechny rubriky</option><option>Profily</option><option>Fun facty</option><option>Future Queens</option><option>MS 2027</option><option>Články</option></select></label>
-        <label class="search-label">Hledat<input id="radarSearch" type="search" placeholder="Hráčka, klub nebo téma…"></label>
-      </div>
-      <div id="radar" aria-live="polite"></div>
-    </section>
-
-    <section id="collection">
-      <div class="section-heading"><div><p class="eyebrow">02 / POD KAPOTOU</p><h2>Sběr a dostupnost</h2></div><button class="primary" id="runNow">Spustit sběr</button></div>
-      <p class="section-description">Sběr běží na GitHubu každé tři hodiny. Ranní dávka vzniká při prvním běhu po 6:00 pražského času; plánovač může mít zpoždění.</p>
-      <div class="tiles" id="tiles"></div>
-      <section class="card"><h2>Zdroje v posledním týdnu</h2><p class="muted" id="matrixHint">Kliknutí na zdroj ukáže kanál a historii načítání.</p><table id="matrix"></table><p class="legend">Čísla = nově nalezené články. Σ = posledních 14 dní. Zelená označuje funkční sběr; dostupnost textu ověřte v detailu. Chyby zdrojů neznamenají, že web nevydává.</p></section>
-      <details class="card"><summary>Poslední běhy sběru</summary><table id="runs"></table></details>
-    </section>
-
-    <section class="card" id="sources">
-      <div class="section-heading"><div><p class="eyebrow">03 / SÍŤ ZDROJŮ</p><h2>Co má Radar sledovat</h2></div><button class="primary" id="addSource">Přidat zdroj</button></div>
-      <p class="section-description">Sdílený seznam pro celou redakci. Nový zdroj se ověří při následujícím sběru. RSS pomůže, ale není povinné.</p>
-      <div id="sourceList"></div>
-      <form id="sourceForm" hidden>
-        <h3 id="sourceFormTitle">Nový zdroj</h3><label class="source-enabled"><input type="checkbox" id="sourceEnabled" checked> Zdroj zapojený do sběru</label><input type="hidden" id="sourceId">
-        <div class="form-grid"><label>Název<input id="sourceName" required maxlength="160" placeholder="Název média nebo klubu"></label><label>Adresa webu či ženské sekce<input id="sourceUrl" type="url" required placeholder="https://…"></label><label>Jazyk<select id="sourceLang"><option value="en">Angličtina</option><option value="cs">Čeština</option><option value="de">Němčina</option><option value="es">Španělština</option><option value="fr">Francouzština</option><option value="pt">Portugalština</option><option value="it">Italština</option><option value="other">Jiný</option></select></label><label>Typ<select id="sourceType"><option>médium</option><option>web klubu</option><option>web ligy</option><option>web federace</option><option>instituce</option><option>newsletter</option></select></label><label>Region<input id="sourceRegion" maxlength="100" placeholder="Například ČR, UK, mezinárodní"></label><label>Poznámka<input id="sourceNote" maxlength="600" placeholder="Proč zdroj sledovat"></label></div>
-        <details><summary>Pokročilé nastavení sběru</summary><div class="form-grid"><label>RSS nebo Atom<input id="sourceFeed" type="url" placeholder="https://…/feed/"></label><label>Stránka s výpisem novinek<input id="sourceListing" type="url" placeholder="https://…/news"></label><label>Filtr titulku a adresy<input id="sourceFilter" placeholder="women|wsl|ženy" maxlength="300"></label></div><p class="muted">Filtr je regulární výraz, který omezuje výsledky z obecných sportovních webů. U zdroje věnovaného jen ženskému fotbalu ho nechte prázdný.</p></details>
-        <p id="sourceError" role="alert"></p><p><button class="primary" type="submit" id="saveSource">Uložit zdroj</button> <button type="button" id="cancelSource">Zrušit</button></p>
-      </form>
-    </section>
-
-    <section id="archive"><p class="eyebrow">04 / PODKLADY</p><h2>Texty a denní dávky</h2><p class="section-description">Dávky obsahují dostupné texty, zdrojové odkazy a data vydání. Lze je použít pro vlastní kontrolu nebo ruční zpracování.</p><section class="card"><h2>Denní dávky ke stažení</h2><table id="batches"></table></section>
-      <details class="card"><summary>Procházet jednotlivé články</summary><div class="articles-filter"><label class="sr-only" for="daySelect">Den nálezu</label><select id="daySelect"></select><label class="sr-only" for="sourceSelect">Zdroj</label><select id="sourceSelect"><option value="">všechny zdroje</option></select><label class="sr-only" for="statusSelect">Stav textu</label><select id="statusSelect"><option value="">všechny stavy</option><option value="ok">s textem</option><option value="no_text">bez textu</option><option value="fetch_failed">stažení selhalo</option><option value="nodate">bez data vydání</option></select></div><table id="articles"></table></details>
-    </section>
-    <section class="card guide" id="guide"><p class="eyebrow">05 / KAŽDÝ DEN</p><h2>Od ranního výběru k vlastnímu článku</h2><div class="guide-grid"><div><b>1. Otevřete výběr</b><p>Vyberte dnešní datum, pak rubriku nebo prioritu. „Řešit dnes“ je doporučení Radaru.</p></div><div><b>2. Ověřte podklad</b><p>Přečtěte podpůrný úryvek a původní článek. Ověřte datum události a to, zda už informaci v QB máte.</p></div><div><b>3. Rozhodněte v redakci</b><p>Radar navrhuje témata, nic sám nepublikuje. Rozhodnutí i vlastní zpracování zůstávají na vás.</p></div></div><details><summary>Když něco nefunguje</summary><p>Červené upozornění popíše chybu AI. Po doplnění kreditu nebo opravě nastavení stiskněte „Obnovit AI výběr“. Tlačítko znovu zpracuje vybraný den a spotřebuje kredit OpenRouter. Sběr článků pokračuje i při chybě AI.</p><p>U nefunkčního zdroje zkontrolujte adresu a RSS. Některé weby roboty blokují. Výběr pokrývá pouze dostupné sledované zdroje a novost vůči databázi QB zatím neověřuje.</p><p>Web i automatické úlohy běží na GitHubu. Váš počítač může být vypnutý. Přístup redakce spravuje vlastník soukromého repozitáře.</p></details></section>
-    <footer>QB RADAR / QUEENBALLERS <span>Redakční nástroj · výběr s pomocí AI · podklady vždy ověřujte</span></footer>
-  </div>
-</main>
-<div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="Detail zdroje"><div class="box" id="modalBox"></div></div>
-<div id="toast" role="status"></div>
-</body>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="refresh" content="0;url=https://qb-radar.netlify.app/">
+<link rel="canonical" href="https://qb-radar.netlify.app/">
+<title>QB Radar – nová adresa</title>
+<p>QB Radar nyní najdete na <a href="https://qb-radar.netlify.app/">qb-radar.netlify.app</a>.</p>
 </html>
